@@ -9,16 +9,7 @@ const cartsRouter = require("./routes/cart");
 const addressRouter = require("./routes/address");
 const cors = require("cors");
 require("dotenv").config();
-const port = process.env.PORT;
-
-// fs and https 모듈 가져오기
-const https = require("https");
-const fs = require("fs");
-
-const options = {
-  key: fs.readFileSync("./config/cert.key"),
-  cert: fs.readFileSync("./config/cert.crt"),
-};
+const port = 3000;
 
 app.use(express.json());
 app.use(
@@ -31,14 +22,12 @@ app.use(
     optionsSuccessStatus: 200, // 응답 상태 200으로 설정
   })
 );
-const MONGO_URL = process.env.MONGO_URI;
-const MONGO_DB_NAME = process.env.MONGO_DB_NAME;
 mongoose.set("strictQuery", false);
 mongoose
-  .connect(MONGO_URL, {
+  .connect("mongodb://localhost:3000", {
     useNewUrlParser: true,
     useUnifiedTopology: true,
-    dbName: MONGO_DB_NAME,
+    dbName: "Shoes_ShoppingMall",
   })
   .then(() => {
     console.log(`[+] mongoseDB Connection`);
@@ -51,7 +40,4 @@ app.get("/", (req, res) => {
 
 app.listen(port, hostname, () => {
   console.log("server is started!");
-});
-https.createServer(options, app).listen(3002, () => {
-  console.log(`HTTPS server started on port 3002`);
 });
