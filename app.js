@@ -24,7 +24,7 @@ app.use(
 );
 mongoose.set("strictQuery", false);
 mongoose
-  .connect("mongodb://localhost:3000", {
+  .connect("mongodb://localhost:27017", {
     useNewUrlParser: true,
     useUnifiedTopology: true,
     dbName: "Shoes_ShoppingMall",
