@@ -9,7 +9,7 @@ const cartsRouter = require("./routes/cart");
 const addressRouter = require("./routes/address");
 const cors = require("cors");
 require("dotenv").config();
-const port = 3001;
+const port = 3000;
 
 app.use(express.json());
 app.use(
