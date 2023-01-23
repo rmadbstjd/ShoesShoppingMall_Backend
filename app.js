@@ -41,6 +41,6 @@ app.get("/", (req, res) => {
   res.send("hello world!!!");
 });
 
-app.listen(port, hostname, () => {
+app.listen(port, () => {
   console.log("server is started!");
 });
