@@ -2,15 +2,16 @@ const express = require("express");
 const router = express.Router();
 const Likes = require("../schemas/like");
 const Products = require("../schemas/products");
+const sessionUserId = require("../app");
 // 유저가 좋아요한 상품 전체 보여주기
 router.get("/like/products", async (req, res) => {
   let arr = [];
   let arr2 = [];
-  const email = req.headers.email;
-  const emails = await Likes.find({ email });
-  console.log("emails", emails);
-  for (let i = 0; i < emails.length; i++) {
-    arr.push(emails[i].productId);
+  const userId = sessionUserId.sessionUserId;
+  const userIds = await Likes.find({ userId });
+
+  for (let i = 0; i < userIds.length; i++) {
+    arr.push(userIds[i].productId);
   }
 
   for (let i = 0; i < arr.length; i++) {
@@ -24,19 +25,19 @@ router.get("/like/products", async (req, res) => {
 router.post("/like/:productId", async (req, res) => {
   console.log("좋아요 실행!");
   const { productId } = req.params;
-  const { email } = req.body;
+  const userId = sessionUserId.sessionUserId;
 
-  const test = await Likes.find({ email: email });
+  const test = await Likes.find({ userId });
 
-  const pushLike = await Likes.create({ email, productId });
+  const pushLike = await Likes.create({ userId, productId });
   let likeDone = true;
   for (let i = 0; i < test.length; i++) {
-    if (pushLike.email == test[i].email) {
-      if (pushLike.productId == test[i].productId) {
+    if (pushLike.userId === test[i].userId) {
+      if (pushLike.productId === test[i].productId) {
         likeDone = false;
 
         await Likes.deleteMany({
-          email: email,
+          userId,
           productId: productId,
         });
       }
@@ -51,11 +52,11 @@ router.post("/like/:productId", async (req, res) => {
 // 유저가 해당 제품을 좋아요 눌렀는지 알려주기
 router.get("/like/isLike/:productId", async (req, res) => {
   const { productId } = req.params;
-  const email = req.headers.email;
+  const userId = sessionUserId.sessionUserId;
   if (!productId) {
     console.log("productId is null");
   }
-  const isLike = await Likes.findOne({ productId, email });
+  const isLike = await Likes.findOne({ productId, userId });
 
   if (isLike) {
     res.json({ result: true });

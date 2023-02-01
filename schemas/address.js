@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 
 const addressSchema = new mongoose.Schema(
   {
-    email: {
+    userId: {
       type: String,
       required: true,
     },

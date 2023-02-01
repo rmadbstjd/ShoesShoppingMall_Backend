@@ -11,7 +11,7 @@ const likesSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    email: {
+    userId: {
       type: String,
       required: true,
     },

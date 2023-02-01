@@ -1,15 +1,19 @@
 const express = require("express");
+const session = require("express-session");
+const cors = require("cors");
 const mongoose = require("mongoose");
 const app = express();
-const hostname = "127.0.0.1";
 const productsRouter = require("./routes/products");
 const likesRouter = require("./routes/likes");
 const cartsRouter = require("./routes/cart");
 const addressRouter = require("./routes/address");
-const cors = require("cors");
+const userRouter = require("./routes/user");
+const orderRouter = require("./routes/order");
 require("dotenv").config();
-const port = 3000;
-
+const port = 3001;
+const Users = require("./schemas/user");
+const FileStore = require("session-file-store")(session);
+exports.sessionUserId;
 app.use(express.json());
 app.use(
   cors({
@@ -18,6 +22,86 @@ app.use(
     optionsSuccessStatus: 200, // 응답 상태 200으로 설정
   })
 );
+
+app.use(
+  session({
+    name: "session ID",
+    secret: process.env.SESSION_SECRET,
+    resave: false,
+    saveUninitialized: false,
+    store: new FileStore(),
+    cookie: {
+      maxAge: 24 * 60 * 60 * 1000,
+      httpOnly: false, // https하려면 true
+      secure: false, //이것도 나중에 true로
+    },
+  })
+);
+//sesion 받아오는 로직
+app.get("/session", (req, res) => {
+  res.status(200).json("session info");
+});
+
+app.post("/login", async (req, res) => {
+  const { userId, password } = req.body;
+  const userInfo = await Users.findOne({ userId, password });
+  if (!userInfo) {
+    console.log("유저 없음");
+    return res.status(201).json();
+  }
+  if (userInfo) {
+    //session 설정
+
+    req.session.save(() => {
+      req.session.user = {
+        userId: userInfo.userId,
+        nickname: userInfo.nickname,
+      };
+      const data = req.session;
+      console.log("데이따!", data.user.userId);
+      exports.sessionUserId = data.user.userId;
+      res.status(200).json({ data });
+    });
+  }
+});
+app.use("/api", [
+  productsRouter,
+  likesRouter,
+  cartsRouter,
+  addressRouter,
+  userRouter,
+  orderRouter,
+]);
+app.post("/signUp", async (req, res) => {
+  const { userId, password, nickname } = req.body;
+  const existsUser = await Users.findOne({ userId });
+  if (existsUser) {
+    console.log("중복된 유저", userId);
+    return res.status(201).json();
+  }
+  const newUser = await Users.create({
+    userId,
+    password,
+    nickname,
+  });
+  return res.status(200).json({ newUser });
+});
+app.get("/login/success", async (req, res) => {
+  try {
+    const data = req.session;
+
+    res.status(200).json(data);
+  } catch (error) {
+    res.status(403).json("user not found!");
+  }
+});
+app.post("/logout", async (req, res) => {
+  //session destory
+  req.session.destroy(() => {
+    res.status(200).json({ message: "logout success!" });
+  });
+});
+
 mongoose.set("strictQuery", false);
 mongoose
   .connect(
@@ -32,10 +116,6 @@ mongoose
     console.log(`[+] mongoseDB Connection`);
   })
   .catch((err) => console.error(`[-] mongoseDB ERROR :: ${err}`));
-app.use("/api", [productsRouter, likesRouter, cartsRouter, addressRouter]);
-app.get("/", (req, res) => {
-  res.send("hello world!!!");
-});
 
 app.listen(port, () => {
   console.log("server is started!");
