@@ -245,7 +245,6 @@ router.get("/search", async (req, res) => {
 });
 // 관리자가 등록한 브랜드 이름 리턴
 router.get("/products/brandsName", async (req, res) => {
-  console.log("실행됨?");
   brands = await Products.find().select(["category", "-_id"]);
   const arr = [];
   for (let i = 0; i < brands.length; i++) {
@@ -259,7 +258,7 @@ router.get("/products/brandsName", async (req, res) => {
 //모든 상품 전체 조회
 router.get("/products/all", async (req, res) => {
   const products = await Products.find({});
-  console.log("products", products);
+
   res.json(products);
 });
 //전체 상품 조회(최신순)
