@@ -40,4 +40,9 @@ router.post("/address", async (req, res) => {
   });
   res.json({ place, receiver, postCode, address, addressDetail, phoneNumber1 });
 });
+router.delete("/address", async (req, res) => {
+  const userId = sessionUserId.sessionUserId;
+  const address = await Address.deleteOne({ userId });
+  res.json(address);
+});
 module.exports = router;

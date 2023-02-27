@@ -9,6 +9,7 @@ const cartsRouter = require("./routes/cart");
 const addressRouter = require("./routes/address");
 const userRouter = require("./routes/user");
 const orderRouter = require("./routes/order");
+const reviewRouter = require("./routes/review");
 require("dotenv").config();
 const port = 3001;
 const Users = require("./schemas/user");
@@ -46,7 +47,6 @@ app.post("/login", async (req, res) => {
   const { userId, password } = req.body;
   const userInfo = await Users.findOne({ userId, password });
   if (!userInfo) {
-    console.log("유저 없음");
     return res.status(201).json();
   }
   if (userInfo) {
@@ -58,7 +58,7 @@ app.post("/login", async (req, res) => {
         nickname: userInfo.nickname,
       };
       const data = req.session;
-      console.log("데이따!", data.user.userId);
+
       exports.sessionUserId = data.user.userId;
       res.status(200).json({ data });
     });
@@ -71,12 +71,12 @@ app.use("/api", [
   addressRouter,
   userRouter,
   orderRouter,
+  reviewRouter,
 ]);
 app.post("/signUp", async (req, res) => {
   const { userId, password, nickname } = req.body;
   const existsUser = await Users.findOne({ userId });
   if (existsUser) {
-    console.log("중복된 유저", userId);
     return res.status(201).json();
   }
   const newUser = await Users.create({

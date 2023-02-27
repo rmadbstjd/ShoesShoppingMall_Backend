@@ -6,14 +6,92 @@ const Cart = require("../schemas/cart");
 // 상품 검색
 router.get("/search", async (req, res) => {
   const { keyword, sort, collectionName, priceOrder } = req.query;
-  console.log("프라이스오더", typeof priceOrder);
+
   const regex = (pattern) => new RegExp(`.*${pattern}.*`);
   let keywordRegex = regex(keyword);
   const arr = (collectionName && collectionName.split(",")) || [];
   const parr = (priceOrder && priceOrder.split(",")) || [];
   const arr2 = [];
   const parr2 = [];
+  const allarr = [];
   arr2.push(keyword);
+
+  if (keyword === "null" && collectionName === undefined) {
+    let product;
+    if (parr.length !== 0) {
+      for (let i = 0; i < parr.length; i++) {
+        parr2.push(parr[i]);
+      }
+      const pset = new Set(parr2);
+      const parr3 = [...pset];
+      let arr5 = [];
+
+      for (let i = 0; i < parr3.length; i++) {
+        const priceOrder1 = parr3[i];
+
+        switch (priceOrder1) {
+          case "0":
+            product = await Products.find().or([
+              {
+                name: { $regex: keywordRegex, $options: "i" },
+              },
+              {
+                category: { $regex: keywordRegex, $options: "i" },
+              },
+              {
+                description: { $regex: keywordRegex, $options: "i" },
+              },
+            ]);
+
+            arr5.push(product);
+            break;
+
+          case "1":
+            product = await Products.find({}).lte("price", 200000);
+
+            arr5.push(product);
+            break;
+
+          case "2":
+            product = await Products.find({})
+              .gte("price", 200000)
+              .lte("price", 400000);
+
+            arr5.push(product);
+            break;
+          case "3":
+            product = await Products.find({})
+              .gte("price", 400000)
+              .lte("price", 600000);
+
+            arr5.push(product);
+            break;
+          case "4":
+            product = await Products.find({}).gte("price", 600000);
+
+            arr5.push(product);
+            break;
+          default:
+            product = await Products.find();
+
+            arr5.push(product);
+            break;
+        }
+      }
+
+      res.json({ products: arr5 });
+      return;
+    } else if (sort === "new") {
+      const products = await Products.find({}).sort({ createdAt: -1 });
+      allarr.push(products);
+      res.json({ products: allarr });
+      return;
+    }
+    const products = await Products.find({}).sort({ likeNum: -1 });
+    allarr.push(products);
+    res.json({ products: allarr });
+    return;
+  }
   if (collectionName !== undefined) {
     for (let i = 0; i < arr.length; i++) {
       arr2.push(arr[i]);
@@ -48,11 +126,10 @@ router.get("/search", async (req, res) => {
     } else if (sort === "popular") {
       sortOrder = "likeNum";
     }
-    console.log("keyword", keywordRegex);
-    console.log("priceOrder", priceOrder);
+
     for (let i = 0; i < parr3.length; i++) {
       const priceOrder1 = parr3[i];
-      console.log("priceOrder1", priceOrder1);
+
       switch (priceOrder1) {
         case "0":
           products = await Products.find()
@@ -90,7 +167,6 @@ router.get("/search", async (req, res) => {
           arr5.push(products);
           break;
         case "2":
-          console.log("products");
           products = await Products.find()
             .or([
               {
@@ -110,7 +186,6 @@ router.get("/search", async (req, res) => {
           arr5.push(products);
           break;
         case "3":
-          console.log("products");
           products = await Products.find()
             .or([
               {
@@ -130,7 +205,6 @@ router.get("/search", async (req, res) => {
           arr5.push(products);
           break;
         case "4":
-          console.log("products");
           products = await Products.find()
             .or([
               {
@@ -149,7 +223,6 @@ router.get("/search", async (req, res) => {
           arr5.push(products);
           break;
         default:
-          console.log("디폴뜨!");
           products = await Products.find()
             .or([
               {
@@ -172,6 +245,7 @@ router.get("/search", async (req, res) => {
 });
 // 관리자가 등록한 브랜드 이름 리턴
 router.get("/products/brandsName", async (req, res) => {
+  console.log("실행됨?");
   brands = await Products.find().select(["category", "-_id"]);
   const arr = [];
   for (let i = 0; i < brands.length; i++) {
@@ -182,6 +256,12 @@ router.get("/products/brandsName", async (req, res) => {
   res.json(uniqueArr);
 });
 
+//모든 상품 전체 조회
+router.get("/products/all", async (req, res) => {
+  const products = await Products.find({});
+  console.log("products", products);
+  res.json(products);
+});
 //전체 상품 조회(최신순)
 router.post("/products/orderByNew", async (req, res) => {
   const { currentPage } = req.body;
@@ -206,9 +286,8 @@ router.post("/products/orderByPopular", async (req, res) => {
 router.post("/products/similar", async (req, res) => {
   const { category, productId } = req.body;
   if (!productId) {
-    console.log("productId is nul!!");
   }
-  const products = await Products.find({ category });
+  const products = await Products.find({ category }).limit(5);
   const arr = [];
   for (let i = 0; i < products.length; i++) {
     if (products[i]._id != productId) {

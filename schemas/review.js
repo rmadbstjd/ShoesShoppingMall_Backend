@@ -1,39 +1,50 @@
 const mongoose = require("mongoose");
 
-const orderSchema = new mongoose.Schema({
-  productId: {
+const reviewSchema = new mongoose.Schema({
+  orderId: {
     type: String,
+    required: true,
+  },
+  content: {
+    type: String,
+    required: true,
+  },
+  rate: {
+    type: Number,
     required: true,
   },
   userId: {
     type: String,
     required: true,
   },
+  productId: {
+    type: String,
+    required: true,
+  },
+  size: {
+    type: Number,
+    required: true,
+  },
   date: {
     type: String,
+    required: true,
+  },
+  coupon: {
+    type: String,
+    required: true,
+  },
+  price: {
+    type: Number,
     required: true,
   },
   count: {
     type: Number,
     required: true,
   },
-  state: {
-    type: String,
-    required: true,
-  },
-  coupon: {
-    type: String,
-    required: false,
-  },
-  size: {
-    type: Number,
-    required: true,
-  },
-  isReviewd: {
-    type: Boolean,
-    default: false,
+  star: {
+    type: Array,
     required: true,
   },
 });
 
-module.exports = mongoose.model("Orders", orderSchema);
+module.exports = mongoose.model("Reviews", reviewSchema);

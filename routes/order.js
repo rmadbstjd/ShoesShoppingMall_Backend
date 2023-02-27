@@ -7,11 +7,12 @@ router.get("/order", async (req, res) => {
   let infoArr = [];
 
   const userId = sessionUserId.sessionUserId;
-  const products = await Orders.find({ userId, state: "배송중" }); //이때 해당 유저의 products는 주문 정보에 porudctId가 있음
+  const products = await Orders.find({ userId, state: "배송중" });
+
+  //이때 해당 유저의 products는 주문 정보에 porudctId가 있음
   for (let i = 0; i < products.length; i++) {
-    console.log("테스트", products[i].productId);
     let info = await Products.findOne({ _id: products[i].productId });
-    console.log("인뽀!", info);
+
     infoArr.push({ product: products[i], info: info });
   }
 
@@ -20,10 +21,29 @@ router.get("/order", async (req, res) => {
 router.get("/order/completed", async (req, res) => {
   let infoArr2 = [];
   const userId = sessionUserId.sessionUserId;
-  const products = await Orders.find({ userId, state: "배송완료" });
+  const products = await Orders.find({
+    userId,
+    state: "배송완료",
+  });
   for (let i = 0; i < products.length; i++) {
     let info = await Products.findOne({ _id: products[i].productId });
     infoArr2.push({ product: products[i], info: info });
+  }
+  res.json(infoArr2);
+});
+router.get("/order/notreviewd", async (req, res) => {
+  let infoArr2 = [];
+  const userId = sessionUserId.sessionUserId;
+  const products = await Orders.find({
+    userId,
+    state: "배송완료",
+    isReviewd: false,
+  });
+  for (let i = 0; i < products.length; i++) {
+    let info = await Products.findOne({
+      _id: products[i].productId,
+    });
+    infoArr2.push({ product: products[i], info: info, state: "notReviewd" });
   }
   res.json(infoArr2);
 });

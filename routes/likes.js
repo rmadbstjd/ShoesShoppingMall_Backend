@@ -18,12 +18,11 @@ router.get("/like/products", async (req, res) => {
     arr2.push(await Products.find({ _id: arr[i] }));
   }
 
-  res.json({ result: arr2 });
+  res.json(arr2);
 });
 
 //좋아요 누르기
 router.post("/like/:productId", async (req, res) => {
-  console.log("좋아요 실행!");
   const { productId } = req.params;
   const userId = sessionUserId.sessionUserId;
 
@@ -54,7 +53,6 @@ router.get("/like/isLike/:productId", async (req, res) => {
   const { productId } = req.params;
   const userId = sessionUserId.sessionUserId;
   if (!productId) {
-    console.log("productId is null");
   }
   const isLike = await Likes.findOne({ productId, userId });
 
