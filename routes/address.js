@@ -1,9 +1,10 @@
 const express = require("express");
 const router = express.Router();
 const Address = require("../schemas/address");
-const sessionUserId = require("../app");
-router.get("/address", async (req, res) => {
-  const userId = sessionUserId.sessionUserId;
+const authenticateAccessToken = require("../middleware/authAccessToken");
+router.get("/address", authenticateAccessToken, async (req, res) => {
+  const { user } = res.locals;
+  const userId = user.id;
   const address = await Address.find({ userId });
   if (address.length !== 0) {
     res.json(address);
@@ -11,8 +12,9 @@ router.get("/address", async (req, res) => {
     res.json();
   }
 });
-router.post("/address", async (req, res) => {
-  const userId = sessionUserId.sessionUserId;
+router.post("/address", authenticateAccessToken, async (req, res) => {
+  const { user } = res.locals;
+  const userId = user.id;
   const {
     place,
     receiver,
@@ -40,8 +42,9 @@ router.post("/address", async (req, res) => {
   });
   res.json({ place, receiver, postCode, address, addressDetail, phoneNumber1 });
 });
-router.delete("/address", async (req, res) => {
-  const userId = sessionUserId.sessionUserId;
+router.delete("/address", authenticateAccessToken, async (req, res) => {
+  const { user } = res.locals;
+  const userId = user.id;
   const address = await Address.deleteOne({ userId });
   res.json(address);
 });

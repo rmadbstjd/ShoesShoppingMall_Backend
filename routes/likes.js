@@ -2,12 +2,14 @@ const express = require("express");
 const router = express.Router();
 const Likes = require("../schemas/like");
 const Products = require("../schemas/products");
-const sessionUserId = require("../app");
+const authenticateAccessToken = require("../middleware/authAccessToken");
 // 유저가 좋아요한 상품 전체 보여주기
-router.get("/like/products", async (req, res) => {
+router.get("/like/products", authenticateAccessToken, async (req, res) => {
+  console.log("좋아요하 ㄴ상품 전체 보여주기");
   let arr = [];
   let arr2 = [];
-  const userId = sessionUserId.sessionUserId;
+  const { user } = res.locals;
+  const userId = user.id;
   const userIds = await Likes.find({ userId });
 
   for (let i = 0; i < userIds.length; i++) {
@@ -22,10 +24,10 @@ router.get("/like/products", async (req, res) => {
 });
 
 //좋아요 누르기
-router.post("/like/:productId", async (req, res) => {
+router.post("/like/:productId", authenticateAccessToken, async (req, res) => {
   const { productId } = req.params;
-  const userId = sessionUserId.sessionUserId;
-
+  const { user } = res.locals;
+  const userId = user.id;
   const test = await Likes.find({ userId });
 
   const pushLike = await Likes.create({ userId, productId });
@@ -49,18 +51,23 @@ router.post("/like/:productId", async (req, res) => {
 });
 
 // 유저가 해당 제품을 좋아요 눌렀는지 알려주기
-router.get("/like/isLike/:productId", async (req, res) => {
-  const { productId } = req.params;
-  const userId = sessionUserId.sessionUserId;
-  if (!productId) {
-  }
-  const isLike = await Likes.findOne({ productId, userId });
+router.get(
+  "/like/isLike/:productId",
+  authenticateAccessToken,
+  async (req, res) => {
+    const { productId } = req.params;
+    const { user } = res.locals;
+    const userId = user.id;
+    if (!productId) {
+    }
+    const isLike = await Likes.findOne({ productId, userId });
 
-  if (isLike) {
-    res.json({ result: true });
-  } else {
-    res.json({ result: false });
+    if (isLike) {
+      res.json({ result: true });
+    } else {
+      res.json({ result: false });
+    }
   }
-});
+);
 
 module.exports = router;

@@ -2,11 +2,12 @@ const express = require("express");
 const router = express.Router();
 const Orders = require("../schemas/order");
 const Products = require("../schemas/products");
-const sessionUserId = require("../app");
-router.get("/order", async (req, res) => {
-  let infoArr = [];
 
-  const userId = sessionUserId.sessionUserId;
+const authenticateAccessToken = require("../middleware/authAccessToken");
+router.get("/order", authenticateAccessToken, async (req, res) => {
+  let infoArr = [];
+  const { user } = res.locals;
+  const userId = user.id;
   const products = await Orders.find({ userId, state: "배송중" });
 
   //이때 해당 유저의 products는 주문 정보에 porudctId가 있음
@@ -18,9 +19,10 @@ router.get("/order", async (req, res) => {
 
   res.json(infoArr);
 });
-router.get("/order/completed", async (req, res) => {
+router.get("/order/completed", authenticateAccessToken, async (req, res) => {
   let infoArr2 = [];
-  const userId = sessionUserId.sessionUserId;
+  const { user } = res.locals;
+  const userId = user.id;
   const products = await Orders.find({
     userId,
     state: "배송완료",
@@ -31,9 +33,10 @@ router.get("/order/completed", async (req, res) => {
   }
   res.json(infoArr2);
 });
-router.get("/order/notreviewd", async (req, res) => {
+router.get("/order/notreviewd", authenticateAccessToken, async (req, res) => {
   let infoArr2 = [];
-  const userId = sessionUserId.sessionUserId;
+  const { user } = res.locals;
+  const userId = user.id;
   const products = await Orders.find({
     userId,
     state: "배송완료",
@@ -47,8 +50,9 @@ router.get("/order/notreviewd", async (req, res) => {
   }
   res.json(infoArr2);
 });
-router.post("/order", async (req, res) => {
-  const userId = sessionUserId.sessionUserId;
+router.post("/order", authenticateAccessToken, async (req, res) => {
+  const { user } = res.locals;
+  const userId = user.id;
   const { productId, date, count, state, coupon, size } = req.body;
 
   await Orders.create({
@@ -62,8 +66,7 @@ router.post("/order", async (req, res) => {
   });
   res.json({ result: "success" });
 });
-router.put("/order", async (req, res) => {
-  const userId = sessionUserId.sessionUserId;
+router.put("/order", authenticateAccessToken, async (req, res) => {
   const { orderId } = req.body;
   const product = await Orders.updateOne(
     { _id: orderId },

@@ -3,9 +3,10 @@ const router = express.Router();
 const Reviews = require("../schemas/review");
 const Orders = require("../schemas/order");
 const Products = require("../schemas/products");
-const sessionUserId = require("../app");
-router.post("/review", async (req, res) => {
-  const userId = sessionUserId.sessionUserId;
+const authenticateAccessToken = require("../middleware/authAccessToken");
+router.post("/review", authenticateAccessToken, async (req, res) => {
+  const { user } = res.locals;
+  const userId = user.id;
   const {
     orderId,
     content,
@@ -41,10 +42,12 @@ router.post("/review", async (req, res) => {
   await Orders.updateOne({ _id: orderId }, { isReviewd: true });
   res.json(review);
 });
-router.get("/review", async (req, res) => {
+router.get("/review", authenticateAccessToken, async (req, res) => {
   let infoArr2 = [];
-  const userId = sessionUserId.sessionUserId;
+  const { user } = res.locals;
+  const userId = user.id;
   const review = await Reviews.find({ userId });
+  console.log("review", review);
   for (let i = 0; i < review.length; i++) {
     let info = await Products.findOne({ _id: review[i].productId });
     infoArr2.push({ product: review[i], info: info });
@@ -52,7 +55,7 @@ router.get("/review", async (req, res) => {
 
   res.json(infoArr2);
 });
-router.delete("/review", async (req, res) => {
+router.delete("/review", authenticateAccessToken, async (req, res) => {
   const { orderId } = req.body;
 
   await Orders.updateOne({ _id: orderId }, { isReviewd: false });

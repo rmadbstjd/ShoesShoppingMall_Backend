@@ -1,7 +1,6 @@
 const express = require("express");
 const router = express.Router();
 const Products = require("../schemas/products");
-const Cart = require("../schemas/cart");
 
 // 상품 검색
 router.get("/search", async (req, res) => {
