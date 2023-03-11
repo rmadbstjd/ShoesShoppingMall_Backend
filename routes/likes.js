@@ -5,7 +5,6 @@ const Products = require("../schemas/products");
 const authenticateAccessToken = require("../middleware/authAccessToken");
 // 유저가 좋아요한 상품 전체 보여주기
 router.get("/like/products", authenticateAccessToken, async (req, res) => {
-  console.log("좋아요하 ㄴ상품 전체 보여주기");
   let arr = [];
   let arr2 = [];
   const { user } = res.locals;

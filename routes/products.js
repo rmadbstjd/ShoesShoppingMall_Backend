@@ -8,239 +8,268 @@ router.get("/search", async (req, res) => {
 
   const regex = (pattern) => new RegExp(`.*${pattern}.*`);
   let keywordRegex = regex(keyword);
-  const arr = (collectionName && collectionName.split(",")) || [];
-  const parr = (priceOrder && priceOrder.split(",")) || [];
-  const arr2 = [];
-  const parr2 = [];
-  const allarr = [];
-  arr2.push(keyword);
+  const collectionNameArr = (collectionName && collectionName.split(",")) || [];
+  const priceOrderArr = (priceOrder && priceOrder.split(",")) || [];
 
-  if (keyword === "null" && collectionName === undefined) {
-    let product;
-    if (parr.length !== 0) {
-      for (let i = 0; i < parr.length; i++) {
-        parr2.push(parr[i]);
-      }
-      const pset = new Set(parr2);
-      const parr3 = [...pset];
-      let arr5 = [];
+  const productsArr = [];
+  let products;
+  // 1. keyword가 null일때, 전체 상품 보여주기 (검색 X)
+  //이때 collectionName을
+  if (keyword === "") {
+    products = await Products.find({});
+    if (collectionNameArr.length !== 0) {
+      for (let i = 0; i < collectionNameArr.length; i++) {
+        if (priceOrderArr.length === 0) {
+          products = await Products.find({
+            category: collectionNameArr[i], // 나이키
+          });
+          productsArr.push(products);
+        }
+        if (priceOrderArr.includes("1")) {
+          products = await Products.find({
+            category: collectionNameArr[i],
+          }).lte("price", 200000);
+          productsArr.push(products);
+        }
+        if (priceOrderArr.includes("2")) {
+          products = await Products.find({
+            category: collectionNameArr[i],
+          })
+            .gte("price", 200000)
+            .lte("price", 400000);
+          productsArr.push(products);
+        }
+        if (priceOrderArr.includes("3")) {
+          products = await Products.find({
+            category: collectionNameArr[i],
+          })
+            .gte("price", 400000)
+            .lte("price", 600000);
+          productsArr.push(products);
+        }
+        if (priceOrderArr.includes("4")) {
+          products = await Products.find({
+            category: collectionNameArr[i],
+          }).gte("price", 600000);
 
-      for (let i = 0; i < parr3.length; i++) {
-        const priceOrder1 = parr3[i];
-
-        switch (priceOrder1) {
-          case "0":
-            product = await Products.find().or([
-              {
-                name: { $regex: keywordRegex, $options: "i" },
-              },
-              {
-                category: { $regex: keywordRegex, $options: "i" },
-              },
-              {
-                description: { $regex: keywordRegex, $options: "i" },
-              },
-            ]);
-
-            arr5.push(product);
-            break;
-
-          case "1":
-            product = await Products.find({}).lte("price", 200000);
-
-            arr5.push(product);
-            break;
-
-          case "2":
-            product = await Products.find({})
-              .gte("price", 200000)
-              .lte("price", 400000);
-
-            arr5.push(product);
-            break;
-          case "3":
-            product = await Products.find({})
-              .gte("price", 400000)
-              .lte("price", 600000);
-
-            arr5.push(product);
-            break;
-          case "4":
-            product = await Products.find({}).gte("price", 600000);
-
-            arr5.push(product);
-            break;
-          default:
-            product = await Products.find();
-
-            arr5.push(product);
-            break;
+          productsArr.push(products);
         }
       }
 
-      res.json({ products: arr5 });
-      return;
-    } else if (sort === "new") {
-      const products = await Products.find({}).sort({ createdAt: -1 });
-      allarr.push(products);
-      res.json({ products: allarr });
-      return;
-    }
-    const products = await Products.find({}).sort({ likeNum: -1 });
-    allarr.push(products);
-    res.json({ products: allarr });
-    return;
-  }
-  if (collectionName !== undefined) {
-    for (let i = 0; i < arr.length; i++) {
-      arr2.push(arr[i]);
-    }
-  }
-  if (priceOrder !== undefined) {
-    for (let i = 0; i < parr.length; i++) {
-      parr2.push(parr[i]);
-    }
-  } else if (priceOrder === undefined) {
-    parr2.push("0");
-  }
-  const set = new Set(arr2);
-  const pset = new Set(parr2);
-  const arr3 = [...set];
-  const parr3 = [...pset];
-  const arr4 = [];
-  const parr4 = [];
-  for (let i = 0; i < arr3.length; i++) {
-    arr4.push(regex(arr3[i]));
-  }
-  for (let i = 0; i < parr3.length; i++) {
-    parr4.push(parr3[i]);
-  }
-  let products;
-  let arr5 = [];
-  let sortOrder;
-  for (let i = 0; i < arr4.length; i++) {
-    keywordRegex = arr4[i];
-    if (sort === "new") {
-      sortOrder = "createdAt";
-    } else if (sort === "popular") {
-      sortOrder = "likeNum";
-    }
-
-    for (let i = 0; i < parr3.length; i++) {
-      const priceOrder1 = parr3[i];
-
-      switch (priceOrder1) {
-        case "0":
-          products = await Products.find()
-            .or([
-              {
-                name: { $regex: keywordRegex, $options: "i" },
-              },
-              {
-                category: { $regex: keywordRegex, $options: "i" },
-              },
-              {
-                description: { $regex: keywordRegex, $options: "i" },
-              },
-            ])
-            .sort(`-${sortOrder}`);
-
-          arr5.push(products);
-          break;
-        case "1":
-          products = await Products.find()
-            .or([
-              {
-                name: { $regex: keywordRegex, $options: "i" },
-              },
-              {
-                category: { $regex: keywordRegex, $options: "i" },
-              },
-              {
-                description: { $regex: keywordRegex, $options: "i" },
-              },
-            ])
-            .sort(`-${sortOrder}`)
-            .lte("price", 200000);
-
-          arr5.push(products);
-          break;
-        case "2":
-          products = await Products.find()
-            .or([
-              {
-                name: { $regex: keywordRegex, $options: "i" },
-              },
-              {
-                category: { $regex: keywordRegex, $options: "i" },
-              },
-              {
-                description: { $regex: keywordRegex, $options: "i" },
-              },
-            ])
-            .sort(`-${sortOrder}`)
+      return res.json(productsArr);
+    } else {
+      if (priceOrderArr.length === 0) productsArr.push(products);
+      else {
+        if (priceOrderArr.length === 0) {
+          products = await Products.find({});
+          productsArr.push(products);
+        }
+        if (priceOrderArr.includes("1")) {
+          products = await Products.find({}).lte("price", 200000);
+          productsArr.push(products);
+        }
+        if (priceOrderArr.includes("2")) {
+          products = await Products.find({})
             .gte("price", 200000)
             .lte("price", 400000);
-
-          arr5.push(products);
-          break;
-        case "3":
-          products = await Products.find()
-            .or([
-              {
-                name: { $regex: keywordRegex, $options: "i" },
-              },
-              {
-                category: { $regex: keywordRegex, $options: "i" },
-              },
-              {
-                description: { $regex: keywordRegex, $options: "i" },
-              },
-            ])
-            .sort(`-${sortOrder}`)
+          productsArr.push(products);
+        }
+        if (priceOrderArr.includes("3")) {
+          products = await Products.find({})
             .gte("price", 400000)
             .lte("price", 600000);
+          productsArr.push(products);
+        }
+        if (priceOrderArr.includes("4")) {
+          products = await Products.find({}).gte("price", 600000);
 
-          arr5.push(products);
-          break;
-        case "4":
-          products = await Products.find()
-            .or([
-              {
-                name: { $regex: keywordRegex, $options: "i" },
-              },
-              {
-                category: { $regex: keywordRegex, $options: "i" },
-              },
-              {
-                description: { $regex: keywordRegex, $options: "i" },
-              },
-            ])
-            .sort(`-${sortOrder}`)
-            .gte("price", 600000);
-
-          arr5.push(products);
-          break;
-        default:
-          products = await Products.find()
-            .or([
-              {
-                name: { $regex: keywordRegex, $options: "i" },
-              },
-              {
-                category: { $regex: keywordRegex, $options: "i" },
-              },
-              {
-                description: { $regex: keywordRegex, $options: "i" },
-              },
-            ])
-            .sort(`-${sortOrder}`);
-          arr5.push(products);
-          break;
+          productsArr.push(products);
+        }
       }
+      res.json(productsArr);
+    }
+  } else {
+    if (collectionNameArr.includes(keyword)) {
+      if (priceOrderArr.length === 0) {
+        products = await Products.find().or([
+          {
+            name: { $regex: keywordRegex, $options: "i" },
+          },
+          {
+            category: { $regex: keywordRegex, $options: "i" },
+          },
+          {
+            description: { $regex: keywordRegex, $options: "i" },
+          },
+        ]);
+        productsArr.push(products);
+        return res.json(productsArr);
+      } else {
+        if (priceOrderArr.includes("1")) {
+          products = await Products.find()
+            .or([
+              {
+                name: { $regex: keywordRegex, $options: "i" },
+              },
+              {
+                category: { $regex: keywordRegex, $options: "i" },
+              },
+              {
+                description: { $regex: keywordRegex, $options: "i" },
+              },
+            ])
+            .lte("price", 200000);
+          productsArr.push(products);
+        }
+        if (priceOrderArr.includes("2")) {
+          products = await Products.find()
+            .or([
+              {
+                name: { $regex: keywordRegex, $options: "i" },
+              },
+              {
+                category: { $regex: keywordRegex, $options: "i" },
+              },
+              {
+                description: { $regex: keywordRegex, $options: "i" },
+              },
+            ])
+            .gte("price", 200000)
+            .lte("price", 399999);
+          productsArr.push(products);
+        }
+        if (priceOrderArr.includes("3")) {
+          products = await Products.find()
+            .or([
+              {
+                name: { $regex: keywordRegex, $options: "i" },
+              },
+              {
+                category: { $regex: keywordRegex, $options: "i" },
+              },
+              {
+                description: { $regex: keywordRegex, $options: "i" },
+              },
+            ])
+            .gte("price", 400000)
+            .lte("price", 599999);
+          productsArr.push(products);
+        }
+        if (priceOrderArr.includes("4")) {
+          products = await Products.find()
+            .or([
+              {
+                name: { $regex: keywordRegex, $options: "i" },
+              },
+              {
+                category: { $regex: keywordRegex, $options: "i" },
+              },
+              {
+                description: { $regex: keywordRegex, $options: "i" },
+              },
+            ])
+            .gte("price", 600000);
+          productsArr.push(products);
+        }
+      }
+      return res.json(productsArr);
+    } else if (collectionNameArr.length === 0) {
+      if (priceOrderArr.length === 0) {
+        products = await Products.find().or([
+          {
+            name: { $regex: keywordRegex, $options: "i" },
+          },
+          {
+            category: { $regex: keywordRegex, $options: "i" },
+          },
+          {
+            description: { $regex: keywordRegex, $options: "i" },
+          },
+        ]);
+        productsArr.push(products);
+      } else if (priceOrderArr.length !== 0) {
+        if (priceOrderArr.includes("1")) {
+          products = await Products.find()
+            .or([
+              {
+                name: { $regex: keywordRegex, $options: "i" },
+              },
+              {
+                category: { $regex: keywordRegex, $options: "i" },
+              },
+              {
+                description: { $regex: keywordRegex, $options: "i" },
+              },
+            ])
+            .lte("price", 200000);
+          productsArr.push(products);
+        }
+        if (priceOrderArr.includes("2")) {
+          products = await Products.find()
+            .or([
+              {
+                name: { $regex: keywordRegex, $options: "i" },
+              },
+              {
+                category: { $regex: keywordRegex, $options: "i" },
+              },
+              {
+                description: { $regex: keywordRegex, $options: "i" },
+              },
+            ])
+            .gte("price", 200000)
+            .lte("price", 400000);
+          productsArr.push(products);
+        }
+        if (priceOrderArr.includes("3")) {
+          products = await Products.find()
+            .or([
+              {
+                name: { $regex: keywordRegex, $options: "i" },
+              },
+              {
+                category: { $regex: keywordRegex, $options: "i" },
+              },
+              {
+                description: { $regex: keywordRegex, $options: "i" },
+              },
+            ])
+            .gte("price", 400000)
+            .lte("price", 600000);
+          productsArr.push(products);
+        }
+        if (priceOrderArr.includes("4")) {
+          products = await Products.find()
+            .or([
+              {
+                name: { $regex: keywordRegex, $options: "i" },
+              },
+              {
+                category: { $regex: keywordRegex, $options: "i" },
+              },
+              {
+                description: { $regex: keywordRegex, $options: "i" },
+              },
+            ])
+            .gte("price", 600000);
+          productsArr.push(products);
+        }
+      }
+      res.json(productsArr);
     }
   }
-  res.json({ products: arr5.reverse(), sort });
+  //1-1) keyword = null인 상태에서 collectionName을 눌렀을 경우
+  //1-2) keyword = null인 상태에서 collectionName과 priceOrder를 눌렀을 경우
+  //1-3 ) keyword = null인 상태에서 prieOrder를 눌렀을 경우
+  //1-4 ) keyword = null인 상태에서 priceOrder와 collectionName을 눌렀을 경우
+
+  //2. keyword가 존재하는 경우, (검색 O) EX 나이키, 아디다스 ...
+  //2-1) keyword = 존재하는 상태에서 collectionName을 눌렀을 경우
+  //2-2) keyword = 존재하는  상태에서 collectionName과 priceOrder를 눌렀을 경우
+  //2-3 ) keyword =존재하는  상태에서 prieOrder를 눌렀을 경우
+  //2-4 ) keyword = 존재하는  상태에서 priceOrder와 collectionName을 눌렀을 경우
+
+  //3. keyword가 존재하지 않는 경우
 });
 // 관리자가 등록한 브랜드 이름 리턴
 router.get("/products/brandsName", async (req, res) => {
@@ -257,9 +286,9 @@ router.get("/products/brandsName", async (req, res) => {
 //모든 상품 전체 조회
 router.get("/products/all", async (req, res) => {
   const products = await Products.find({});
-
   res.json(products);
 });
+
 //전체 상품 조회(최신순)
 router.post("/products/orderByNew", async (req, res) => {
   const { currentPage } = req.body;

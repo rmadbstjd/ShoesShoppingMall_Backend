@@ -47,7 +47,7 @@ router.get("/review", authenticateAccessToken, async (req, res) => {
   const { user } = res.locals;
   const userId = user.id;
   const review = await Reviews.find({ userId });
-  console.log("review", review);
+
   for (let i = 0; i < review.length; i++) {
     let info = await Products.findOne({ _id: review[i].productId });
     infoArr2.push({ product: review[i], info: info });

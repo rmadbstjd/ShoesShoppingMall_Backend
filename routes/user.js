@@ -60,11 +60,11 @@ router.get("/user", authenticateAccessToken, async (req, res) => {
 // access token을 refresh token 기반으로 재발급
 router.post("/refresh", (req, res) => {
   let refreshToken = req.headers["authorization"];
-  console.log("refreshToken", refreshToken);
+
   if (!refreshToken) return res.sendStatus(401);
   jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, (error, user) => {
     if (error) return res.sendStatus(401);
-    console.log("user", user);
+
     const accessToken = generateAccessToken(user.id, user.nickname);
 
     res.json({ accessToken });
