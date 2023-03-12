@@ -2,6 +2,28 @@ const express = require("express");
 const router = express.Router();
 const Products = require("../schemas/products");
 
+// 상품 검색 자동 완성
+router.post("/search/autocompleted", async (req, res) => {
+  const { keyword } = req.body;
+  const regex = (pattern) => new RegExp(`.*${pattern}.*`);
+  let keywordRegex = regex(keyword);
+
+  const products = await Products.find()
+    .or([
+      {
+        name: { $regex: keywordRegex, $options: "i" },
+      },
+      {
+        category: { $regex: keywordRegex, $options: "i" },
+      },
+      {
+        description: { $regex: keywordRegex, $options: "i" },
+      },
+    ])
+    .sort({ likeNum: -1 })
+    .limit(10);
+  res.json(products);
+});
 // 상품 검색
 router.get("/search", async (req, res) => {
   const { keyword, sort, collectionName, priceOrder } = req.query;
@@ -14,12 +36,13 @@ router.get("/search", async (req, res) => {
   const productsArr = [];
   let products;
   // 1. keyword가 null일때, 전체 상품 보여주기 (검색 X)
-  //이때 collectionName을
   if (keyword === "") {
     products = await Products.find({});
     if (collectionNameArr.length !== 0) {
+      // 브랜드를 체크했을 때
       for (let i = 0; i < collectionNameArr.length; i++) {
         if (priceOrderArr.length === 0) {
+          //가격 필터링을 아무 것도 체크 안했을 때
           products = await Products.find({
             category: collectionNameArr[i], // 나이키
           });
@@ -55,40 +78,37 @@ router.get("/search", async (req, res) => {
           productsArr.push(products);
         }
       }
-
-      return res.json(productsArr);
     } else {
-      if (priceOrderArr.length === 0) productsArr.push(products);
-      else {
-        if (priceOrderArr.length === 0) {
-          products = await Products.find({});
-          productsArr.push(products);
-        }
-        if (priceOrderArr.includes("1")) {
-          products = await Products.find({}).lte("price", 200000);
-          productsArr.push(products);
-        }
-        if (priceOrderArr.includes("2")) {
-          products = await Products.find({})
-            .gte("price", 200000)
-            .lte("price", 400000);
-          productsArr.push(products);
-        }
-        if (priceOrderArr.includes("3")) {
-          products = await Products.find({})
-            .gte("price", 400000)
-            .lte("price", 600000);
-          productsArr.push(products);
-        }
-        if (priceOrderArr.includes("4")) {
-          products = await Products.find({}).gte("price", 600000);
+      // 브랜드를 체크 아무 것도 체크 안했을 때
 
-          productsArr.push(products);
-        }
+      if (priceOrderArr.length === 0) {
+        products = await Products.find({});
+        productsArr.push(products);
       }
-      res.json(productsArr);
+      if (priceOrderArr.includes("1")) {
+        products = await Products.find({}).lte("price", 200000);
+        productsArr.push(products);
+      }
+      if (priceOrderArr.includes("2")) {
+        products = await Products.find({})
+          .gte("price", 200000)
+          .lte("price", 400000);
+        productsArr.push(products);
+      }
+      if (priceOrderArr.includes("3")) {
+        products = await Products.find({})
+          .gte("price", 400000)
+          .lte("price", 600000);
+        productsArr.push(products);
+      }
+      if (priceOrderArr.includes("4")) {
+        products = await Products.find({}).gte("price", 600000);
+
+        productsArr.push(products);
+      }
     }
   } else {
+    // keywor가 존재할 때
     if (collectionNameArr.includes(keyword)) {
       if (priceOrderArr.length === 0) {
         products = await Products.find().or([
@@ -103,7 +123,6 @@ router.get("/search", async (req, res) => {
           },
         ]);
         productsArr.push(products);
-        return res.json(productsArr);
       } else {
         if (priceOrderArr.includes("1")) {
           products = await Products.find()
@@ -172,8 +191,8 @@ router.get("/search", async (req, res) => {
           productsArr.push(products);
         }
       }
-      return res.json(productsArr);
     } else if (collectionNameArr.length === 0) {
+      //나이키를 검색하고 필터링 브랜드에서 아무 것도 체크 안했을 때
       if (priceOrderArr.length === 0) {
         products = await Products.find().or([
           {
@@ -255,21 +274,48 @@ router.get("/search", async (req, res) => {
           productsArr.push(products);
         }
       }
-      res.json(productsArr);
     }
   }
-  //1-1) keyword = null인 상태에서 collectionName을 눌렀을 경우
-  //1-2) keyword = null인 상태에서 collectionName과 priceOrder를 눌렀을 경우
-  //1-3 ) keyword = null인 상태에서 prieOrder를 눌렀을 경우
-  //1-4 ) keyword = null인 상태에서 priceOrder와 collectionName을 눌렀을 경우
-
-  //2. keyword가 존재하는 경우, (검색 O) EX 나이키, 아디다스 ...
-  //2-1) keyword = 존재하는 상태에서 collectionName을 눌렀을 경우
-  //2-2) keyword = 존재하는  상태에서 collectionName과 priceOrder를 눌렀을 경우
-  //2-3 ) keyword =존재하는  상태에서 prieOrder를 눌렀을 경우
-  //2-4 ) keyword = 존재하는  상태에서 priceOrder와 collectionName을 눌렀을 경우
-
-  //3. keyword가 존재하지 않는 경우
+  let sortedData;
+  let sortedProductsArr = [];
+  for (let i = 0; i < productsArr.length; i++) {
+    sortedData = productsArr[i];
+    for (let i = 0; i < sortedData.length; i++) {
+      sortedProductsArr.push(sortedData[i]);
+    }
+  }
+  switch (sort) {
+    case "0":
+      let popularProducts = sortedProductsArr.sort(function (a, b) {
+        if (a.likeNum > b.likeNum) return -1;
+        if (a.likeNum < b.likeNum) return 1;
+        return 0;
+      });
+      return res.json(popularProducts);
+    case "1":
+      let newProducts = sortedProductsArr.sort(function (a, b) {
+        if (a.createdAt > b.createdAt) return -1;
+        if (a.createdAt < b.createdAt) return 1;
+        return 0;
+      });
+      return res.json(newProducts);
+    case "2":
+      let highPriceProducts = sortedProductsArr.sort(function (a, b) {
+        if (a.price > b.price) return -1;
+        if (a.price < b.price) return 1;
+        return 0;
+      });
+      return res.json(highPriceProducts);
+    case "3":
+      let lowPriceProducts = sortedProductsArr.sort(function (a, b) {
+        if (a.price > b.price) return 1;
+        if (a.price < b.price) return -1;
+        return 0;
+      });
+      return res.json(lowPriceProducts);
+    default:
+      break;
+  }
 });
 // 관리자가 등록한 브랜드 이름 리턴
 router.get("/products/brandsName", async (req, res) => {
