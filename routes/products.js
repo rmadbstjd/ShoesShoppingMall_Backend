@@ -7,7 +7,20 @@ router.post("/search/autocompleted", async (req, res) => {
   const { keyword } = req.body;
   const regex = (pattern) => new RegExp(`.*${pattern}.*`);
   let keywordRegex = regex(keyword);
+  let brandsNameArr = [];
+  let newBrandsName = [];
+  const brandsName = await Products.find()
+    .or([
+      {
+        category: { $regex: keywordRegex, $options: "i" },
+      },
+    ])
+    .select("-_id category");
+  for (let i = 0; i < brandsName.length; i++) {
+    newBrandsName.push(brandsName[i].category[0]);
+  }
 
+  brandsNameArr = [...new Set(newBrandsName)];
   const products = await Products.find()
     .or([
       {
@@ -22,12 +35,12 @@ router.post("/search/autocompleted", async (req, res) => {
     ])
     .sort({ likeNum: -1 })
     .limit(10);
-  res.json(products);
+  res.json({ products: products, brands: brandsNameArr });
 });
 // 상품 검색
 router.get("/search", async (req, res) => {
   const { keyword, sort, collectionName, priceOrder } = req.query;
-
+  console.log(keyword, sort, collectionName, priceOrder);
   const regex = (pattern) => new RegExp(`.*${pattern}.*`);
   let keywordRegex = regex(keyword);
   const collectionNameArr = (collectionName && collectionName.split(",")) || [];
@@ -320,13 +333,14 @@ router.get("/search", async (req, res) => {
 // 관리자가 등록한 브랜드 이름 리턴
 router.get("/products/brandsName", async (req, res) => {
   brands = await Products.find().select(["category", "-_id"]);
-  const arr = [];
+  let newBrandsName = [];
+  let brandsNameArr = [];
   for (let i = 0; i < brands.length; i++) {
-    arr.push(brands[i].category);
+    newBrandsName.push(brands[i].category[0]);
   }
-  const set = new Set(arr);
-  const uniqueArr = [...set];
-  res.json(uniqueArr);
+  brandsNameArr = [...new Set(newBrandsName)];
+
+  res.json(brandsNameArr);
 });
 
 //모든 상품 전체 조회
