@@ -1,6 +1,10 @@
 const mongoose = require("mongoose");
 
 const reviewSchema = new mongoose.Schema({
+  image: {
+    type: String,
+    required: true,
+  },
   orderId: {
     type: String,
     required: true,

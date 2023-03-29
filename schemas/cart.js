@@ -35,7 +35,7 @@ const cartsSchema = new mongoose.Schema(
       required: true,
     },
     category: {
-      type: String,
+      type: Array,
       require: true,
     },
   },

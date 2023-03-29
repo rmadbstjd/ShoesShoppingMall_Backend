@@ -7,7 +7,6 @@ router.post("/search/autocompleted", async (req, res) => {
   const { keyword } = req.body;
   const regex = (pattern) => new RegExp(`.*${pattern}.*`);
   let keywordRegex = regex(keyword);
-  let brandsNameArr = [];
   let newBrandsName = [];
   const brandsName = await Products.find()
     .or([
@@ -17,10 +16,17 @@ router.post("/search/autocompleted", async (req, res) => {
     ])
     .select("-_id category");
   for (let i = 0; i < brandsName.length; i++) {
-    newBrandsName.push(brandsName[i].category[0]);
+    console.log("new", brandsName[i].category);
+    newBrandsName.push(brandsName[i].category);
   }
-
-  brandsNameArr = [...new Set(newBrandsName)];
+  let uniqueArr = newBrandsName.filter((element, index) => {
+    return (
+      //1차원 배열에서는 indexOf를 사용했지만 다차원 배열에서는 안먹힘
+      newBrandsName.findIndex(
+        (item) => item[0] === element[0] && item[1] === element[1]
+      ) === index
+    );
+  });
   const products = await Products.find()
     .or([
       {
@@ -35,12 +41,12 @@ router.post("/search/autocompleted", async (req, res) => {
     ])
     .sort({ likeNum: -1 })
     .limit(10);
-  res.json({ products: products, brands: brandsNameArr });
+  res.json({ products: products, brands: uniqueArr });
 });
 // 상품 검색
 router.get("/search", async (req, res) => {
-  const { keyword, sort, collectionName, priceOrder } = req.query;
-  console.log(keyword, sort, collectionName, priceOrder);
+  const { keyword, sort, collectionName, priceOrder, page, offset } = req.query;
+  console.log("페이지", page);
   const regex = (pattern) => new RegExp(`.*${pattern}.*`);
   let keywordRegex = regex(keyword);
   const collectionNameArr = (collectionName && collectionName.split(",")) || [];
@@ -297,35 +303,46 @@ router.get("/search", async (req, res) => {
       sortedProductsArr.push(sortedData[i]);
     }
   }
+  let count;
   switch (sort) {
     case "0":
       let popularProducts = sortedProductsArr.sort(function (a, b) {
         if (a.likeNum > b.likeNum) return -1;
         if (a.likeNum < b.likeNum) return 1;
+
         return 0;
       });
-      return res.json(popularProducts);
+
+      count = popularProducts.length;
+      products = popularProducts.slice((page - 1) * offset, page * offset);
+      return res.json({ products, count });
     case "1":
       let newProducts = sortedProductsArr.sort(function (a, b) {
         if (a.createdAt > b.createdAt) return -1;
         if (a.createdAt < b.createdAt) return 1;
         return 0;
       });
-      return res.json(newProducts);
+      count = newProducts.length;
+      products = newProducts.slice((page - 1) * offset, page * offset);
+      return res.json({ products, count });
     case "2":
       let highPriceProducts = sortedProductsArr.sort(function (a, b) {
         if (a.price > b.price) return -1;
         if (a.price < b.price) return 1;
         return 0;
       });
-      return res.json(highPriceProducts);
+      count = highPriceProducts.length;
+      products = highPriceProducts.slice((page - 1) * offset, page * offset);
+      return res.json({ products, count });
     case "3":
       let lowPriceProducts = sortedProductsArr.sort(function (a, b) {
         if (a.price > b.price) return 1;
         if (a.price < b.price) return -1;
         return 0;
       });
-      return res.json(lowPriceProducts);
+      count = lowPriceProducts.length;
+      products = lowPriceProducts.slice((page - 1) * offset, page * offset);
+      return res.json({ products, count });
     default:
       break;
   }

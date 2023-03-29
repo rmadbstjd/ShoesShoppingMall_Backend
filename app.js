@@ -1,5 +1,5 @@
 const express = require("express");
-const session = require("express-session");
+
 const cors = require("cors");
 const mongoose = require("mongoose");
 const app = express();
@@ -10,6 +10,7 @@ const addressRouter = require("./routes/address");
 const userRouter = require("./routes/user");
 const orderRouter = require("./routes/order");
 const reviewRouter = require("./routes/review");
+const qnaRouter = require("./routes/qna");
 require("dotenv").config();
 const port = 3000;
 exports.sessionUserId;
@@ -30,6 +31,7 @@ app.use("/api", [
   userRouter,
   orderRouter,
   reviewRouter,
+  qnaRouter,
 ]);
 
 mongoose.set("strictQuery", false);

@@ -3,7 +3,7 @@ const router = express.Router();
 const Carts = require("../schemas/cart");
 
 const authenticateAccessToken = require("../middleware/authAccessToken");
-let asd = 0;
+
 require("dotenv").config();
 //해당 유저의 장바구니 조회
 router.get("/cart", authenticateAccessToken, async (req, res) => {

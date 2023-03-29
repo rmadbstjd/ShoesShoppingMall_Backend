@@ -8,6 +8,7 @@ router.post("/review", authenticateAccessToken, async (req, res) => {
   const { user } = res.locals;
   const userId = user.id;
   const {
+    image,
     orderId,
     content,
     rate,
@@ -26,6 +27,7 @@ router.post("/review", authenticateAccessToken, async (req, res) => {
     await Reviews.deleteOne({ orderId });
   }
   const review = await Reviews.create({
+    image,
     userId,
     orderId,
     content,
@@ -42,6 +44,7 @@ router.post("/review", authenticateAccessToken, async (req, res) => {
   await Orders.updateOne({ _id: orderId }, { isReviewd: true });
   res.json(review);
 });
+
 router.get("/review", authenticateAccessToken, async (req, res) => {
   let infoArr2 = [];
   const { user } = res.locals;
@@ -55,6 +58,13 @@ router.get("/review", authenticateAccessToken, async (req, res) => {
 
   res.json(infoArr2);
 });
+
+router.get("/review/:productId", async (req, res) => {
+  const { productId } = req.params;
+  const reviews = await Reviews.find({ productId });
+  res.json(reviews);
+});
+
 router.delete("/review", authenticateAccessToken, async (req, res) => {
   const { orderId } = req.body;
 
