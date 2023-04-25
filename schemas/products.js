@@ -35,6 +35,10 @@ const productsSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    sort: {
+      type: String,
+      default: false,
+    },
   },
   {
     timestamps: true,

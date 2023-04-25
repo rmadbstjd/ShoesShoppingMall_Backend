@@ -22,11 +22,18 @@ const qnaSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    answered: {
+    isAnswered: {
       type: Boolean,
       required: true,
     },
     dates: {
+      type: String,
+      required: true,
+    },
+    answer: {
+      type: String,
+    },
+    image: {
       type: String,
       required: true,
     },

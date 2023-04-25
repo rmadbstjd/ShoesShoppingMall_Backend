@@ -38,6 +38,10 @@ const cartsSchema = new mongoose.Schema(
       type: Array,
       require: true,
     },
+    isChecked: {
+      type: Boolean,
+      default: true,
+    },
   },
   { timestamps: true }
 );
