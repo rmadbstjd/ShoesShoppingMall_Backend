@@ -57,6 +57,7 @@ router.get("/order/notreviewd", authenticateAccessToken, async (req, res) => {
       });
       infoArr2.push({ product: products[i], info: info, state: "notReviewd" });
     }
+    infoArr2.reverse();
     res.json(infoArr2);
   } catch (error) {
     console.log("error", error);

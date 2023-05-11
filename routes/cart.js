@@ -13,12 +13,12 @@ router.get("/cart", authenticateAccessToken, async (req, res) => {
     const products = await Carts.find({ userId }).sort({ price: -1 });
     if (products.length === 0) {
       return res.json({
-        success: "false",
+        success: false,
         errorMessage: "장바구니에 상품이 존재하지 않습니다.",
       });
     } else {
       res.json({
-        success: "true",
+        success: true,
         products,
       });
     }

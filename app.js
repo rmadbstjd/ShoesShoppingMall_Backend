@@ -50,6 +50,6 @@ mongoose
   .catch((err) => console.error(`[-] mongoseDB ERROR :: ${err}`));
 
 app.listen(port, () => {
-  console.log("server is started!");
+  console.log("server is started@!");
 });
 module.exports = app;
