@@ -3,7 +3,6 @@ require("dotenv").config();
 
 module.exports = (req, res, next) => {
   let authHeader = req.headers["authorization"];
-
   let token = authHeader;
   if (!token) return res.json({ isAuth: false });
 
@@ -11,7 +10,6 @@ module.exports = (req, res, next) => {
     if (error) {
       return res.sendStatus(401);
     }
-
     res.locals.user = user;
     req.user = user;
     next();

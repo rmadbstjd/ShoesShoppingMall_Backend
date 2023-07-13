@@ -3,33 +3,37 @@ const router = express.Router();
 const Qnas = require("../schemas/qna");
 const Products = require("../schemas/products");
 const authenticateAccessToken = require("../middleware/authAccessToken");
-router.post("/qna/:productId", authenticateAccessToken, async (req, res) => {
-  try {
-    const { user } = res.locals;
-    const userId = user.id;
-    const { productId } = req.params;
-    const { title, content, isSecret, dates, image } = req.body;
-
-    const Qna = await Qnas.create({
-      userId,
-      productId,
-      title,
-      content,
-      isSecret,
-      isAnswered: false,
-      dates,
-      image,
-    });
-    res.json(Qna);
-  } catch (error) {
-    console.log("error", error);
+router.post(
+  "/qna/product/:productId",
+  authenticateAccessToken,
+  async (req, res) => {
+    try {
+      const { user } = res.locals;
+      const userId = user.id;
+      const { productId } = req.params;
+      const { title, content, isSecret, dates, image } = req.body;
+      console.log(title, content, isSecret, dates, image);
+      const Qna = await Qnas.create({
+        userId,
+        productId,
+        title,
+        content,
+        isSecret,
+        isAnswered: false,
+        dates,
+        image,
+      });
+      res.status(201).json(Qna);
+    } catch (error) {
+      console.log("error", error);
+    }
   }
-});
+);
 
 router.get("/qna/notanswered", async (req, res) => {
   try {
     const QnA = await Qnas.find({ isAnswered: false }).sort({ createdAt: -1 });
-    res.json(QnA);
+    res.status(200).json(QnA);
   } catch (error) {
     console.log("error", error);
   }
@@ -38,7 +42,7 @@ router.get("/qna/notanswered", async (req, res) => {
 router.get("/qna/answered", async (req, res) => {
   try {
     const QnA = await Qnas.find({ isAnswered: true }).sort({ createdAt: -1 });
-    res.json(QnA);
+    res.status(200).json(QnA);
   } catch (error) {
     console.log("error", error);
   }
@@ -57,7 +61,6 @@ router.get("/qna/mypage", authenticateAccessToken, async (req, res) => {
     const QnACount = await Qnas.find({ userId });
 
     const count = QnACount.length;
-    console.log("page", page, "count", count);
     const idArr = [];
     const products = [];
     for (let i = 0; i < QnA.length; i++) {
@@ -67,12 +70,12 @@ router.get("/qna/mypage", authenticateAccessToken, async (req, res) => {
       const Product = await Products.find({ _id: idArr[i] });
       products.push(Product);
     }
-    res.json({ QnA, products, count });
+    res.status(200).json({ QnA, products, count });
   } catch (error) {
     console.log("error", error);
   }
 });
-router.get("/qna/:productId", async (req, res) => {
+router.get("/qna/product/:productId", async (req, res) => {
   try {
     const { productId } = req.params;
     const { page } = req.headers;
@@ -82,56 +85,61 @@ router.get("/qna/:productId", async (req, res) => {
       .sort({ createdAt: -1 })
       .skip((page - 1) * 5)
       .limit(5);
-    res.json({ Qna, count });
+    res.status(200).json({ Qna, count });
   } catch (error) {
     console.log("error", error);
   }
 });
 
-router.put("/qna/:productId", authenticateAccessToken, async (req, res) => {
-  try {
-    const { user } = res.locals;
-    const userId = user.id;
-    const { productId } = req.params;
-    const { title, content, isSecret, dates, qnaId } = req.body;
-    const Qna = await Qnas.updateOne(
-      { _id: qnaId },
-      {
-        userId,
-        productId,
-        title,
-        content,
-        isSecret,
-        isAnswered: false,
-        dates,
-      }
-    );
-    res.json(Qna);
-  } catch (error) {
-    console.log("error", error);
+router.put(
+  "/qna/product/:productId/:qnaId",
+  authenticateAccessToken,
+  async (req, res) => {
+    try {
+      const { user } = res.locals;
+      const userId = user.id;
+      const { productId, qnaId } = req.params;
+      const { title, content, isSecret, dates } = req.body;
+      const Qna = await Qnas.updateOne(
+        { _id: qnaId },
+        {
+          userId,
+          productId,
+          title,
+          content,
+          isSecret,
+          isAnswered: false,
+          dates,
+        }
+      );
+      res.status(201).tson(Qna);
+    } catch (error) {
+      console.log("error", error);
+    }
   }
-});
+);
 
-router.put("/qna/answer/:productId", async (req, res) => {
+router.put("/qna/answer/:qnaId", async (req, res) => {
   try {
-    const { answer, qnaId } = req.body;
+    const { qnaId } = req.params;
+    const { answer } = req.body;
     const Qna = await Qnas.updateOne(
       { _id: qnaId },
       { answer: answer, isAnswered: true }
     );
-    res.json(Qna);
+    res.status(201).json(Qna);
   } catch (error) {
     console.log("error", error);
   }
 });
 
-router.delete("/qna/:productId", authenticateAccessToken, async (req, res) => {
+router.delete("/qna/:qnaId", authenticateAccessToken, async (req, res) => {
   try {
-    const { qnaId } = req.body;
+    const { qnaId } = req.params;
     const Qna = await Qnas.deleteOne({
       _id: qnaId,
     });
-    res.json(Qna);
+    res.status(200).json(Qna);
   } catch (error) {
     console.log("error", error);
   }

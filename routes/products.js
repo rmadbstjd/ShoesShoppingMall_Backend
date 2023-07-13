@@ -3,7 +3,7 @@ const router = express.Router();
 const Products = require("../schemas/products");
 
 // 상품 검색 자동 완성
-router.post("/search/autocompleted", async (req, res) => {
+router.post("/search/autocompletedproducts", async (req, res) => {
   try {
     const { keyword } = req.body;
     const regex = (pattern) => new RegExp(`.*${pattern}.*`);
@@ -21,7 +21,6 @@ router.post("/search/autocompleted", async (req, res) => {
     }
     let uniqueArr = newBrandsName.filter((element, index) => {
       return (
-        //1차원 배열에서는 indexOf를 사용했지만 다차원 배열에서는 안먹힘
         newBrandsName.findIndex(
           (item) => item[0] === element[0] && item[1] === element[1]
         ) === index
@@ -41,13 +40,13 @@ router.post("/search/autocompleted", async (req, res) => {
       ])
       .sort({ likeNum: -1 })
       .limit(10);
-    res.json({ products: products, brands: uniqueArr });
+    res.status(200).json({ products: products, brands: uniqueArr });
   } catch (error) {
     console.log("error", error);
   }
 });
 // 상품 검색
-router.get("/search", async (req, res) => {
+router.get("/search/products", async (req, res) => {
   try {
     const { keyword, sort, collectionName, priceOrder, page, offset } =
       req.query;
@@ -320,7 +319,7 @@ router.get("/search", async (req, res) => {
 
         count = popularProducts.length;
         products = popularProducts.slice((page - 1) * offset, page * offset);
-        return res.json({ products, count });
+        return res.status(200).json({ products, count });
       case "new":
         let newProducts = sortedProductsArr.sort(function (a, b) {
           if (a.createdAt > b.createdAt) return -1;
@@ -329,7 +328,7 @@ router.get("/search", async (req, res) => {
         });
         count = newProducts.length;
         products = newProducts.slice((page - 1) * offset, page * offset);
-        return res.json({ products, count });
+        return res.status(200).json({ products, count });
       case "highprice":
         let highPriceProducts = sortedProductsArr.sort(function (a, b) {
           if (a.price > b.price) return -1;
@@ -338,7 +337,7 @@ router.get("/search", async (req, res) => {
         });
         count = highPriceProducts.length;
         products = highPriceProducts.slice((page - 1) * offset, page * offset);
-        return res.json({ products, count });
+        return res.status(200).json({ products, count });
       case "lowprice":
         let lowPriceProducts = sortedProductsArr.sort(function (a, b) {
           if (a.price > b.price) return 1;
@@ -347,7 +346,7 @@ router.get("/search", async (req, res) => {
         });
         count = lowPriceProducts.length;
         products = lowPriceProducts.slice((page - 1) * offset, page * offset);
-        return res.json({ products, count });
+        return res.status(200).json({ products, count });
       default:
         break;
     }
@@ -356,7 +355,7 @@ router.get("/search", async (req, res) => {
   }
 });
 // 관리자가 등록한 브랜드 이름 리턴
-router.get("/products/brandsName", async (req, res) => {
+router.get("/products/brandsname", async (req, res) => {
   try {
     brands = await Products.find().select(["category", "-_id"]);
     let newBrandsName = [];
@@ -366,14 +365,14 @@ router.get("/products/brandsName", async (req, res) => {
     }
     brandsNameArr = [...new Set(newBrandsName)];
 
-    res.json(brandsNameArr);
+    res.status(200).json(brandsNameArr);
   } catch (error) {
     console.log("error", error);
   }
 });
 
 //모든 상품 전체 조회
-router.get("/products/all", async (req, res) => {
+router.get("/allproducts", async (req, res) => {
   try {
     const { page } = req.headers;
 
@@ -383,14 +382,14 @@ router.get("/products/all", async (req, res) => {
       .limit(5);
     const countArr = await Products.find({});
     const count = countArr.length;
-    res.json({ products, count });
+    res.status(200).json({ products, count });
   } catch (error) {
     console.log("error", error);
   }
 });
 
 //전체 상품 조회(최신순)
-router.post("/products/orderByNew", async (req, res) => {
+router.post("/newproducts", async (req, res) => {
   try {
     const { currentPage } = req.body;
 
@@ -402,14 +401,14 @@ router.post("/products/orderByNew", async (req, res) => {
         .limit(5);
       productsArr.push(products);
     }
-    res.json(productsArr);
+    res.status(200).json(productsArr);
   } catch (error) {
     console.log("error", error);
   }
 });
 
 // 전체 상품 조회(인기순)
-router.post("/products/orderByPopular", async (req, res) => {
+router.post("/popularproducts", async (req, res) => {
   try {
     const { currentPage } = req.body;
 
@@ -422,14 +421,14 @@ router.post("/products/orderByPopular", async (req, res) => {
         .limit(5);
       productsArr.push(products);
     }
-    res.json(productsArr);
+    res.status(200).json(productsArr);
   } catch (error) {
     console.log("error", error);
   }
 });
 
 //전체 상품 조회(유니크순)
-router.post("/products/orderByUnique", async (req, res) => {
+router.post("/uniqueproducts", async (req, res) => {
   try {
     const { currentPage } = req.body;
     let productsArr = [];
@@ -440,26 +439,26 @@ router.post("/products/orderByUnique", async (req, res) => {
         .limit(5);
       productsArr.push(products);
     }
-    res.json(productsArr);
+    res.status(200).json(productsArr);
   } catch (error) {
     console.log("error", error);
   }
 });
 // 같은 카테고리 상품 조회
-router.post("/products/similar", async (req, res) => {
+router.post("/similarproducts", async (req, res) => {
   try {
     const { category, productId } = req.body;
     const products = await Products.find({ category, _id: { $ne: productId } })
       .sort({ likeNum: -1 })
       .limit(5);
-    res.json(products);
+    res.status(200).json(products);
   } catch (error) {
     console.log("error", error);
   }
 });
 
 // 상품 추가
-router.post("/products", async (req, res) => {
+router.post("/product", async (req, res) => {
   try {
     const { name, image, category, size, description, price } = req.body;
     const cateogryArr = category.split(",");
@@ -472,13 +471,13 @@ router.post("/products", async (req, res) => {
       price: price.replace(/,/g, ""),
     });
 
-    res.json({ product: createdProduct });
+    res.status(201).json({ product: createdProduct });
   } catch (error) {
     console.log("error", error);
   }
 });
 // 상품 수정
-router.put("/products", async (req, res) => {
+router.put("/product", async (req, res) => {
   try {
     const { name, image, category, size, description, price, productId } =
       req.body;
@@ -494,31 +493,31 @@ router.put("/products", async (req, res) => {
         price: price.replace(/,/g, ""),
       }
     );
-    res.json({ product: editedProduct });
+    res.status(201).json({ product: editedProduct });
   } catch (error) {
     console.log("error", error);
   }
 });
 
-router.delete("/products", async (req, res) => {
+router.delete("/product", async (req, res) => {
   try {
     const { productId } = req.body;
     const Product = await Products.deleteOne({
       _id: productId,
     });
-    res.json(Product);
+    res.status(200).json(Product);
   } catch (error) {
     console.log("error", error);
   }
 });
 // 개별 상품 조회
-router.get("/products/:productId", async (req, res) => {
+router.get("/product/:productId", async (req, res) => {
   try {
     const { productId } = req.params;
     const product = await Products.findOne({ _id: productId });
     if (product) res.json({ product });
   } catch (error) {
-    res.json({ error: true });
+    res.status(200).json({ error: true });
   }
 });
 

@@ -12,45 +12,51 @@ router.get("/cart", authenticateAccessToken, async (req, res) => {
     const userId = user.id;
     const products = await Carts.find({ userId }).sort({ price: -1 });
     if (products.length === 0) {
-      return res.json({
+      return res.status(200).json({
         success: false,
         errorMessage: "장바구니에 상품이 존재하지 않습니다.",
       });
     } else {
-      res.json({
+      res.status(200).json({
         success: true,
         products,
       });
     }
   } catch (error) {
+    return res.status(500).json();
     console.log("error", error);
   }
 });
 
-router.get("/cart/checked", authenticateAccessToken, async (req, res) => {
-  try {
-    const { user } = res.locals;
-    const userId = user.id;
-    const products = await Carts.find({ userId, isChecked: true }).sort({
-      createdAt: -1,
-    });
-    if (products.length === 0) {
-      return res.json({
-        success: "false",
-        errorMessage: "장바구니에 상품이 존재하지 않습니다.",
+router.get(
+  "/cart/check/products",
+  authenticateAccessToken,
+  async (req, res) => {
+    try {
+      const { user } = res.locals;
+      const userId = user.id;
+      const products = await Carts.find({ userId, isChecked: true }).sort({
+        createdAt: -1,
       });
-    } else {
-      res.json({
-        success: "true",
-        products,
-      });
+      if (products.length === 0) {
+        return res.status(200).json({
+          success: "false",
+          errorMessage: "장바구니에 상품이 존재하지 않습니다.",
+        });
+      } else {
+        res.status(200).json({
+          success: "true",
+          products,
+        });
+      }
+    } catch (error) {
+      return res.status(500).json();
+      console.log("error", error);
     }
-  } catch (error) {
-    console.log("error", error);
   }
-});
+);
 // 개별 상품 장바구니에 추가
-router.post("/carts/:productId", authenticateAccessToken, async (req, res) => {
+router.post("/cart/:productId", authenticateAccessToken, async (req, res) => {
   try {
     const { productId } = req.params;
     const { user } = res.locals;
@@ -63,7 +69,7 @@ router.post("/carts/:productId", authenticateAccessToken, async (req, res) => {
       size: size,
     });
     if (existsCarts.length) {
-      return res.json({
+      return res.status(200).json({
         success: false,
         errorMessage: "이미 장바구니에 존재하는 상품입니다.",
       });
@@ -80,41 +86,37 @@ router.post("/carts/:productId", authenticateAccessToken, async (req, res) => {
       description: product.description,
     });
 
-    res.json({ result: "success" });
+    res.status(201).json({ result: "success" });
   } catch (error) {
     console.log("error", error);
   }
 });
 // 개별 상품 장바구니에서 삭제
-router.delete(
-  "/carts/:productId",
-  authenticateAccessToken,
-  async (req, res) => {
-    try {
-      const { productId } = req.params;
-      const { user } = res.locals;
-      const userId = user.id;
-      const { size } = req.body;
+router.delete("/cart/:productId", authenticateAccessToken, async (req, res) => {
+  try {
+    const { productId } = req.params;
+    const { user } = res.locals;
+    const userId = user.id;
+    const { size } = req.body;
 
-      const existsCarts = await Carts.deleteOne({
-        productId: productId,
-        userId: userId,
-        size: size,
-      });
+    const existsCarts = await Carts.deleteOne({
+      productId: productId,
+      userId: userId,
+      size: size,
+    });
 
-      if (existsCarts) {
-        res.json({ result: "success" });
-      } else {
-        res.json({ result: "false" });
-      }
-    } catch (error) {
-      console.log("error", error);
+    if (existsCarts) {
+      res.status(200).json({ result: "success" });
+    } else {
+      res.status(200).json({ result: "false" });
     }
+  } catch (error) {
+    console.log("error", error);
   }
-);
+});
 
 router.put(
-  "/carts/:productId/check",
+  "/cart/check/:productId/",
   authenticateAccessToken,
   async (req, res) => {
     try {
@@ -122,9 +124,6 @@ router.put(
       const userId = user.id;
       const { productId } = req.params;
       const { isChecked } = req.body;
-      console.log("productId", productId);
-      console.log("is", isChecked);
-      console.log("userId", userId);
       const product = await Carts.updateOne(
         {
           productId,
@@ -134,7 +133,7 @@ router.put(
           isChecked,
         }
       );
-      res.json({ product });
+      res.status(201).json({ product });
     } catch (error) {
       console.log("error", error);
     }
@@ -142,7 +141,7 @@ router.put(
 );
 
 //개별 상품 장바구니 수량 변경
-router.put("/carts/:productId", authenticateAccessToken, async (req, res) => {
+router.put("/cart/:productId", authenticateAccessToken, async (req, res) => {
   try {
     const { user } = res.locals;
     const userId = user.id;
@@ -156,7 +155,7 @@ router.put("/carts/:productId", authenticateAccessToken, async (req, res) => {
       },
       { quantity: quantity }
     );
-    res.json({ success: true });
+    res.status(201).json({ success: true });
   } catch (error) {
     console.log("error", error);
   }

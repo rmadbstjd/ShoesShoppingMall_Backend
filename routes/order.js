@@ -18,51 +18,63 @@ router.get("/order", authenticateAccessToken, async (req, res) => {
       infoArr.push({ product: products[i], info: info });
     }
 
-    res.json(infoArr);
+    res.status(200).json(infoArr);
   } catch (error) {
     console.log("error", error);
   }
 });
-router.get("/order/completed", authenticateAccessToken, async (req, res) => {
-  try {
-    let infoArr2 = [];
-    const { user } = res.locals;
-    const userId = user.id;
-    const products = await Orders.find({
-      userId,
-      state: "배송완료",
-    });
-    for (let i = 0; i < products.length; i++) {
-      let info = await Products.findOne({ _id: products[i].productId });
-      infoArr2.push({ product: products[i], info: info });
-    }
-    res.json(infoArr2);
-  } catch (error) {
-    console.log("error", error);
-  }
-});
-router.get("/order/notreviewd", authenticateAccessToken, async (req, res) => {
-  try {
-    let infoArr2 = [];
-    const { user } = res.locals;
-    const userId = user.id;
-    const products = await Orders.find({
-      userId,
-      state: "배송완료",
-      isReviewd: false,
-    });
-    for (let i = 0; i < products.length; i++) {
-      let info = await Products.findOne({
-        _id: products[i].productId,
+router.get(
+  "/order/completedproducts",
+  authenticateAccessToken,
+  async (req, res) => {
+    try {
+      let infoArr2 = [];
+      const { user } = res.locals;
+      const userId = user.id;
+      const products = await Orders.find({
+        userId,
+        state: "배송완료",
       });
-      infoArr2.push({ product: products[i], info: info, state: "notReviewd" });
+      for (let i = 0; i < products.length; i++) {
+        let info = await Products.findOne({ _id: products[i].productId });
+        infoArr2.push({ product: products[i], info: info });
+      }
+      res.status(200).json(infoArr2);
+    } catch (error) {
+      console.log("error", error);
     }
-    infoArr2.reverse();
-    res.json(infoArr2);
-  } catch (error) {
-    console.log("error", error);
   }
-});
+);
+router.get(
+  "/order/notreviewdproducts",
+  authenticateAccessToken,
+  async (req, res) => {
+    try {
+      let infoArr2 = [];
+      const { user } = res.locals;
+      const userId = user.id;
+      const products = await Orders.find({
+        userId,
+        state: "배송완료",
+        isReviewd: false,
+      });
+      for (let i = 0; i < products.length; i++) {
+        let info = await Products.findOne({
+          _id: products[i].productId,
+        });
+        infoArr2.push({
+          product: products[i],
+          info: info,
+          state: "notReviewd",
+        });
+      }
+      infoArr2.reverse();
+      res.status(200).json(infoArr2);
+    } catch (error) {
+      console.log("error", error);
+    }
+  }
+);
 router.post("/order", authenticateAccessToken, async (req, res) => {
   try {
     const { user } = res.locals;
@@ -78,7 +90,7 @@ router.post("/order", authenticateAccessToken, async (req, res) => {
       coupon,
       size,
     });
-    res.json({ result: "success" });
+    res.status(201).json({ result: "success" });
   } catch (error) {
     console.log("error", error);
   }
@@ -90,7 +102,7 @@ router.put("/order", authenticateAccessToken, async (req, res) => {
       { _id: orderId },
       { state: "배송완료" }
     );
-    res.json(product);
+    res.status(201).json(product);
   } catch (error) {
     console.log("error", error);
   }

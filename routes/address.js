@@ -6,11 +6,12 @@ router.get("/address", authenticateAccessToken, async (req, res) => {
   try {
     const { user } = res.locals;
     const userId = user.id;
-    const address = await Address.find({ userId });
-    if (address.length !== 0) {
-      res.json(address);
+    const address = await Address.findOne({ userId });
+    console.log("address", address);
+    if (address) {
+      res.status(200).json(address);
     } else {
-      res.json();
+      res.status(400).json();
     }
   } catch (error) {
     console.log("error", error);
@@ -45,15 +46,9 @@ router.post("/address", authenticateAccessToken, async (req, res) => {
       phoneNumber2,
       phoneNumber3,
     });
-    res.json({
-      place,
-      receiver,
-      postCode,
-      address,
-      addressDetail,
-      phoneNumber1,
-    });
+    res.status(201).json();
   } catch (error) {
+    res.status(500).json();
     console.log("error", error);
   }
 });

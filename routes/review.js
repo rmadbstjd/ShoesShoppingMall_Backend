@@ -43,7 +43,7 @@ router.post("/review", authenticateAccessToken, async (req, res) => {
       star,
     });
     await Orders.updateOne({ _id: orderId }, { isReviewd: true });
-    res.json(review);
+    res.status(201).json(review);
   } catch (error) {
     console.log("error", error);
   }
@@ -61,7 +61,7 @@ router.get("/review", authenticateAccessToken, async (req, res) => {
       infoArr2.push({ product: review[i], info: info });
     }
 
-    res.json(infoArr2);
+    res.status(200).json(infoArr2);
   } catch (error) {
     console.log("error", error);
   }
@@ -77,7 +77,7 @@ router.get("/review/:productId", async (req, res) => {
       .sort({ createdAt: -1 })
       .skip((page - 1) * 5)
       .limit(5);
-    res.json({ reviews, count });
+    res.status(200).json({ reviews, count });
   } catch (error) {
     console.log("error", error);
   }
@@ -89,7 +89,7 @@ router.delete("/review", authenticateAccessToken, async (req, res) => {
     await Orders.updateOne({ _id: orderId }, { isReviewd: false });
     const review = await Reviews.deleteOne({ orderId });
 
-    res.json(review);
+    res.status(200).json(review);
   } catch (error) {
     console.log("error", error);
   }

@@ -33,17 +33,13 @@ app.use("/api", [
   reviewRouter,
   qnaRouter,
 ]);
-
 mongoose.set("strictQuery", false);
 mongoose
-  .connect(
-    "mongodb+srv://shoppingMall:kys3421!@cluster0.fpbuo.mongodb.net/?retryWrites=true&w=majority",
-    {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-      dbName: "Shoes_ShoppingMall",
-    }
-  )
+  .connect(process.env.MONGODB_SRC, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    dbName: "Shoes_ShoppingMall",
+  })
   .then(() => {
     console.log(`[+] mongoseDB Connection`);
   })
